@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="mkcres : A tool for generating and maintaining C/C++ resource files to be embedded in a program." />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>mkcres</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/jahnf/mkcres">View on GitHub</a>
+
+          <h1 id="project_title">mkcres</h1>
+          <h2 id="project_tagline">A tool for generating and maintaining C/C++ resource files to be embedded in a program.</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/jahnf/mkcres/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/jahnf/mkcres/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a name="mkcres" class="anchor" href="#mkcres"><span class="octicon octicon-link"></span></a>mkcres</h1>
+
+<p>mkcres is a Python tool for generating and maintaining C/C++ resource 
+files that can be embedded in a program. mkcres comes with a python comand 
+line tool and also a header and source for easy access to the embedded 
+resources within the program.</p>
+
+<p>Basically mkcres takes a JSON configuration file and turns it into a bunch 
+of C source files that can be compiled together with your project and 
+included in your build process. It also supports partial updates of the 
+generated C files since mkcres only updates files if the modification 
+date of a file changes.</p>
+
+<p>Here is an example JSON configuration file:</p>
+
+<pre><code>{ 
+  "CRES": [
+    {
+      "prefix": "icons/",
+      "files": [
+        { "name": "img/app32x32.png" },
+        { "name": "x.png", "alias": "img/exit.png" }
+      ]
+    }, 
+    {
+      "prefix": "other_stuff/",
+      "files": [
+        { "name": "encryption_key_v1.pub", "alias": "key.pub" },
+        { "name": "lookup.sqlite" }
+      ]
+    }
+  ]
+}
+</code></pre>
+
+<h3>
+<a name="dependencies" class="anchor" href="#dependencies"><span class="octicon octicon-link"></span></a>Dependencies</h3>
+
+<p>mkcres needs Python 2 version 2.7 or higher since it currently uses the argparse library.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">mkcres maintained by <a href="https://github.com/jahnf">jahnf</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
