@@ -33,8 +33,10 @@ Here is an example JSON configuration file:
       ]
     }
 
-### Dependencies
-
-
+Dependencies
+------------
 mkcres needs Python 2 version 2.7 or higher since it currently uses the argparse library.
 
+License
+-------
+See [LICENSE](https://github.com/jahnf/mkcres/blob/master/LICENSE).
