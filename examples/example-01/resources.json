@@ -1,0 +1,19 @@
+{ 
+  "CRES": [
+    {
+      "prefix": "images/",
+      "files": [
+        { "name": "linux_logo.jpg" },
+        { "name": "linux_logo.jpg", "alias": "tux.jpg" }
+      ]
+    }, 
+    {
+      "prefix": "data-files/",
+      "files": [
+        { "name": "FILE01" },
+        { "name": "FILE02" },
+        { "name": "FILE03" }
+      ]
+    }
+  ]
+}

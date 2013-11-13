@@ -24,4 +24,3 @@ cresource_t* get_cresource(const char* filename)
     }
     return 0;
 }
-

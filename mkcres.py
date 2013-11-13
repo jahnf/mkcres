@@ -171,7 +171,6 @@ def writeCMainSource(config):
     return
 
 def addResource(args, prefix, fileconf, origin_in, outconf):
-
     if not fileconf.has_key('name'): return 0
     abspath = os.path.join(os.path.abspath(os.path.dirname(origin_in)), fileconf['name'])
     try:
@@ -188,6 +187,7 @@ def addResource(args, prefix, fileconf, origin_in, outconf):
                 if not out_pre.has_key('files'):
                     out_pre['files'] = []
                 found_prefix = True
+                break
 
     if not found_prefix:
         out_pre = {'prefix': prefix, 'files': []}
@@ -260,18 +260,6 @@ def isSrcFileInConfig(src_filename, config):
     return False
 
 def create(args):
-    try:
-        resfile_inconfig = json.loads(args.resfile.read())
-    except:
-        errorAndExit("Could not parse resource file.")
-        
-    if not resfile_inconfig.has_key(CRES_KEY):
-        errorAndExit("Not a cresource config file. Missing {0} key.".format(CRES_KEY))
-
-    res_infile_dir = os.path.dirname(args.resfile.name)
-    res_infile_abspath = os.path.abspath(args.resfile.name)
-    res_infile_absdir = os.path.abspath(res_infile_dir)
-    
     if args.outdir:
         res_outdir = args.outdir
     else:
@@ -282,9 +270,10 @@ def create(args):
         try:
             os.makedirs(res_outdir)
         except:
-            errorAndExit("Could not create output directory.")
-            
-    if not os.path.exists(os.path.join(res_outdir, OUT_FILENAME)) or args.overwrite:
+            errorAndExit("Could not create output directory '{0}'.".format(res_outdir))
+
+    # open or create cres intermediate outfile
+    if not os.path.exists(os.path.join(res_outdir, OUT_FILENAME)) or args.force:
         outfile = open(os.path.join(res_outdir, OUT_FILENAME),"w+")
         resfile_outconfig = { CRES_KEY : [] }
     else:
@@ -299,46 +288,60 @@ def create(args):
         outfile.seek(0,0)
     
     resfile_outconfig['outdir'] = os.path.abspath(res_outdir)
-    
-    for p in resfile_inconfig[CRES_KEY]:
-        # for every prefix section
-        if not p.has_key('prefix'):
-            p['prefix'] = ""
-        if not p.has_key('files'):
-            p['files'] = []
 
-    # for every file in outconfig check if in infile -> if not remove
     of_remove_list = []
-    if not args.keep_missing:
-        inconfig_absdir = os.path.abspath(os.path.dirname(res_infile_abspath))
-        for op in resfile_outconfig[CRES_KEY]:
-            if not op.has_key('prefix'): op['prefix'] = ""
-            if op.has_key('files'):
-                for of in op['files']:
-                    if not of.has_key('abspath'): continue
-                    if not of.has_key('origin_config'): continue
-                    if not of['origin_config'] == res_infile_abspath: continue
-                    found = False
-                    for ip in resfile_inconfig[CRES_KEY]:
-                       for f in ip['files']:
-                            if not f.has_key('name'): continue
-                            abspath = os.path.join(inconfig_absdir, f['name'])
-                            if (of['abspath'] == abspath and op['prefix'] == ip['prefix']):
-                                if f.has_key('alias'): 
-                                    if f['alias'] == of['name_out']: found = True
-                                elif f.has_key('name') and f['name'] == of['name_out']:
-                                    found = True
-                                if found: break
-                    
-                    if not found:
-                        of_remove_list.append(of)
-                        op['files'].remove(of)
-    
-    # add resources loop
     new_entries = 0
-    for p in resfile_inconfig[CRES_KEY]:
-        for f in p['files']:
-            new_entries += addResource(args, p['prefix'], f, res_infile_abspath, resfile_outconfig)
+
+    for infile in args.resfile:
+        try:
+            resfile_inconfig = json.loads(infile.read())
+        except:
+            errorAndExit("Could not parse resource file '{0}'.".format(infile.name))
+            
+        if not resfile_inconfig.has_key(CRES_KEY):
+            errorAndExit("Not a cresource config file. Missing {0} key.".format(CRES_KEY))
+
+        res_infile_dir = os.path.dirname(infile.name)
+        res_infile_abspath = os.path.abspath(infile.name)
+        res_infile_absdir = os.path.abspath(res_infile_dir)
+
+        for p in resfile_inconfig[CRES_KEY]:
+            # for every prefix section
+            if not p.has_key('prefix'):
+                p['prefix'] = ""
+            if not p.has_key('files'):
+                p['files'] = []
+
+        # for every file in outconfig check if in infile -> if not remove
+        if not args.keep_missing:
+            inconfig_absdir = os.path.abspath(os.path.dirname(res_infile_abspath))
+            for op in resfile_outconfig[CRES_KEY]:
+                if not op.has_key('prefix'): op['prefix'] = ""
+                if op.has_key('files'):
+                    for of in op['files']:
+                        if not of.has_key('abspath'): continue
+                        if not of.has_key('origin_config'): continue
+                        if not of['origin_config'] == res_infile_abspath: continue
+                        found = False
+                        for ip in resfile_inconfig[CRES_KEY]:
+                           for f in ip['files']:
+                                if not f.has_key('name'): continue
+                                abspath = os.path.join(inconfig_absdir, f['name'])
+                                if (of['abspath'] == abspath and op['prefix'] == ip['prefix']):
+                                    if f.has_key('alias'): 
+                                        if f['alias'] == of['name_out']: found = True
+                                    elif f.has_key('name') and f['name'] == of['name_out']:
+                                        found = True
+                                    if found: break
+                        
+                        if not found:
+                            of_remove_list.append(of)
+                            op['files'].remove(of)
+        
+        # add resources loop
+        for p in resfile_inconfig[CRES_KEY]:
+            for f in p['files']:
+                new_entries += addResource(args, p['prefix'], f, res_infile_abspath, resfile_outconfig)
         
     # delete orphaned C src files
     for f in of_remove_list:
@@ -352,10 +355,10 @@ def create(args):
     if new_entries > 0 or len(of_remove_list) > 0:
         #print "Update cres.c"
         writeCMainSource(resfile_outconfig) 
-        if args.sources_list_outfile:
-            try: slfile = open(args.sources_list_outfile,'w+')
-            except: errorAndExit("Cannot open:" + args.sources_list_outfile)
-            writeSourcesList(resfile_outconfig, resfile_outconfig['outdir'], slfile, cmake=args.sources_list_cmake, absolute=True)
+        if args.list_outfile:
+            try: slfile = open(args.list_outfile,'w+')
+            except: errorAndExit("Cannot open:" + args.list_outfile)
+            writeSourcesList(resfile_outconfig, resfile_outconfig['outdir'], slfile, cmake=args.list_cmake_prefix, absolute=True)
             slfile.truncate()
             slfile.close()
         
@@ -377,9 +380,9 @@ def listfiles(args):
         errorAndExit("Parser error")
 
     infile.close()
-    writeSourcesList(config, args.dir, args.outfile,cmake=args.cmake,relative=args.relative,absolute=args.absolute)
+    writeSourcesList(config, args.dir, args.outfile,cmake=args.cmake_prefix,relative=args.relative,absolute=args.absolute)
     
-def writeSourcesList(config, outdir, outfile, cmake=False, relative=False, absolute=False):
+def writeSourcesList(config, outdir, outfile, cmake, relative=False, absolute=False):
     if not config.has_key(CRES_KEY): config[CRES_KEY] = []
     source_files = [OUT_SOURCENAME]
     for p in config[CRES_KEY]:
@@ -390,7 +393,7 @@ def writeSourcesList(config, outdir, outfile, cmake=False, relative=False, absol
                 source_files.append(f['c_src'])
             
     if cmake: 
-        outfile.write("set(CRES_SOURCE_FILES" + '\n')
+        outfile.write("set(" + cmake + "_CRES_SOURCE_FILES" + '\n')
         
     for s in source_files:
         if cmake: outfile.write('\t"')
@@ -413,21 +416,21 @@ def main():
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + SCRIPT_VERSION)
     subparsers = parser.add_subparsers(help='options')
     parser_a = subparsers.add_parser('create', help='Generate resource files')
-    parser_a.add_argument('resfile', help='resource definition file', type=argparse.FileType('r'))
     parser_a.add_argument('--outdir', help='output directory')
-    parser_a.add_argument('--overwrite', help='overwrite mode, default is update mode', action='store_const', const=True)
+    parser_a.add_argument('--force', help='force rewrite, default is update mode', action='store_const', const=True)
     parser_a.add_argument('--keep-missing', help='keep missing entries in output', action='store_const', const=True)
     parser_a.add_argument('--quiet', help='no outputs', action='store_const', const=True)
-    parser_a.add_argument('--sources-list-outfile', help='', required=False)
-    parser_a.add_argument('--sources-list-cmake', help='cmake format', action='store_const', const=True)
+    parser_a.add_argument('--list-outfile', help='', required=False)
+    parser_a.add_argument('--list-cmake-prefix', help='cmake format', required=False)
+    parser_a.add_argument('resfile', help='resource definition file', nargs='+', type=argparse.FileType('r'))
     parser_a.set_defaults(func=create)
     
     parser_b = subparsers.add_parser('list', help='List generated files')
     parser_b.add_argument('dir', help='output directory to scan for ' + OUT_FILENAME)
-    group = parser_b.add_mutually_exclusive_group() 
+    group = parser_b.add_mutually_exclusive_group(required=True) 
     group.add_argument('--absolute', action='store_const', const=True, help='list source files with absolute path')
     group.add_argument('--relative', action='store_const', const=True, help='list source files with relative path from current working directory')
-    parser_b.add_argument('--cmake', help='output for cmake', action='store_const', const=True)
+    parser_b.add_argument('--cmake-prefix', help='output for cmake', required=False)
     parser_b.add_argument('outfile',nargs='?', type=argparse.FileType('w'), default=sys.stdout)
     parser_b.set_defaults(func=listfiles)
     
