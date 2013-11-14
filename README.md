@@ -14,24 +14,39 @@ date of a file changes.
 
 Here is an example JSON configuration file:
 
-    { 
-      "CRES": [
-        {
-          "prefix": "icons/",
-          "files": [
-            { "name": "img/app32x32.png" },
-            { "name": "x.png", "alias": "img/exit.png" }
-          ]
-        }, 
-        {
-          "prefix": "other_stuff/",
-          "files": [
-            { "name": "encryption_key_v1.pub", "alias": "key.pub" },
-            { "name": "lookup.sqlite" }
-          ]
-        }
+``` json
+{ 
+  "CRES": [
+    {
+      "prefix": "icons/",
+      "files": [
+        { "name": "img/app32x32.png" },
+        { "name": "x.png", "alias": "img/exit.png" }
+      ]
+    }, 
+    {
+      "prefix": "other_stuff/",
+      "files": [
+        { "name": "encryption_key_v1.pub", "alias": "key.pub" },
+        { "name": "lookup.sqlite" }
       ]
     }
+  ]
+}
+```
+
+- [ ] TODO: Describe configuration file details
+
+Usage
+-----
+
+### Command line
+
+- [ ] TODO: Describe command line usage and arguments
+
+### CMake
+
+- [ ] TODO: Describe how to use within CMake with mkcres.cmake
 
 Dependencies
 ------------
