@@ -12,13 +12,12 @@ int main (int argc, char **argv)
     if( c ) {
         cresource_prefix_t **p = (cresource_prefix_t**)c->prefix_sections;
         for( ; p && *p; ++p) {
-            printf("prefix: %s\n", (*p)->prefix);
             cresource_t **r = (cresource_t**)(*p)->resources;
             for( ; r && *r; ++r ) {
-                printf(" - %s\n", (*r)->name);
+                printf("%s%s (%lu bytes)\n", (*p)->prefix, (*r)->name, (*r)->size);
             } 
-        }
-    }
+        } 
+    } 
 
     return 0;
 }
