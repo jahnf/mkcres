@@ -1,5 +1,6 @@
 # mkcres example-01
 # resources in a minimal example that can list its included resources
+# * Visit https://github.com/jahnf/mkcres for more details
 
 cmake_minimum_required(VERSION 2.8.0)
 project(example01)

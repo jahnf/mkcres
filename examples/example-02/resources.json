@@ -1,0 +1,19 @@
+{ 
+  "CRES": [
+    {
+      "prefix": "images/",
+      "files": [
+        { "name": "main.c" },
+        { "name": "main.c", "alias": "tux.jpg" }
+      ]
+    }, 
+    {
+      "prefix": "data-files/",
+      "files": [
+        { "name": "Makefile", "alias": "1" },
+        { "name": "Makefile", "alias": "3" },
+        { "name": "main.c", "alias": "2" }
+      ]
+    }
+  ]
+}

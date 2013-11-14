@@ -1,4 +1,4 @@
-/* mkcres example-01
+/* mkcres example-02
  * resources in a minimal example that can list its included resources
  * Visit https://github.com/jahnf/mkcres for more details
  */
