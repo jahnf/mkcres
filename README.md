@@ -10,7 +10,8 @@ Basically mkcres takes a JSON configuration file and turns it into a bunch
 of C source files that can be compiled together with your project and 
 included in your build process. It also supports partial updates of the 
 generated C files since mkcres only updates files if the modification 
-date of a file changes.
+date of a file changes. A single file can appear in the resources multiple
+times under a different name but will be compiled in only once.
 
 Here is an example JSON configuration file:
 
@@ -46,7 +47,30 @@ Usage
 
 ### CMake
 
-- [ ] TODO: Describe how to use within CMake with mkcres.cmake
+For easy use within CMake files the function `mkcres_add_library(name config_file mkcres_dir)` 
+of the helper script `mkcres.cmake` can be used.  Lets have a look at a simple example:
+
+```CMake
+# Assuming you have all the mkcres files in a subdirectory called 'mkcres'
+# (mkcres.cmake mkcres.py cresource.c cresource.h)
+
+include(mkcres/mkcres.cmake)
+mkcres_add_library(myresources resources.json "./mkcres")
+
+add_executable(example main.c)
+target_link_libraries(example myresources)
+```
+
+Using the `mkcres_add_library` function will automatically add additional make targets 
+to your project:
+* *mkcres-update*: will update the C resource files form all targets added with `mkcres_add_library`
+* *mkcres-force-rewrite*: will rewrite all the C resource files completely from all targets added with `mkcres_add_library`
+
+For a full example have a look at example-01 in the examples directory of mkcres.
+
+##### Drawbacks with CMake
+
+- [ ] TODO: Describe the minor drawbacks when detecting changes to the resources.
 
 Dependencies
 ------------
