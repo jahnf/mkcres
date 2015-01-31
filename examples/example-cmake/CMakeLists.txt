@@ -3,6 +3,8 @@
 # * Visit https://github.com/jahnf/mkcres for more details
 
 cmake_minimum_required(VERSION 2.8.0)
+set(CMAKE_LEGACY_CYGWIN_WIN32 0) # Remove when CMake >= 2.8.4 is required
+
 project(example01)
 
 include(../../mkcres.cmake)

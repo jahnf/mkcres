@@ -49,16 +49,13 @@
 #   ]
 # }
 
-# TODO: clean up code, add function documentation and some code comments.
-
-import sys
-import argparse  # we should switch getopt to support Python versions prior to 2.7
-import textwrap
+import sys, os, textwrap, json
+import filecmp
+import argparse  # needs Python version 2.7 or higher
 import hashlib
-import os
-import json
+import binascii
 
-SCRIPT_VERSION = "0.1"
+SCRIPT_VERSION = "0.2"
 OUT_FILENAME = "CRES.out"
 OUT_SOURCENAME = 'cres.c'
 CRES_KEY = 'CRES'
@@ -75,25 +72,25 @@ def bytes_from_file(infile, chunksize=8192):
         else:
             break
 
-def errorAndExit(reason):
+def error_and_exit(reason):
     sys.stderr.write(reason + '\n')
     exit(1)
 
-def writeCSource(infile, outfile_config, out_basedir):
+def write_c_source(infile, outfile_config, out_basedir):
     global CRES_CRESOURCE_TYPE
     
-    if not outfile_config.has_key('c_src') or outfile_config['c_src'] == "":
+    if not 'c_src' in outfile_config or outfile_config['c_src'] == "":
         hashname = hashlib.sha1()
-        hashname.update(outfile_config['abspath'])
-        outfile_config['c_src'] = '__' + hashname.hexdigest() + '.c' 
+        hashname.update(outfile_config['abspath'].encode('utf-8'))
+        outfile_config['c_src'] = '__' + hashname.hexdigest() + '.c'    
     
-    if not outfile_config.has_key('c_data_var') or outfile_config['c_data_var'] == "":
+    if not 'c_data_var' in outfile_config or outfile_config['c_data_var'] == "":
         outfile_config['c_data_var'] = "___cres_data" + os.path.splitext(os.path.basename(outfile_config['c_src']))[0];
     
     try:
         outfile = open(os.path.join(out_basedir, outfile_config['c_src']), 'w+')
     except:
-        errorAndExit("Could not write c resource file.")
+        error_and_exit("Could not write c resource file.")
         
     outfile.write("/* auto generated CRES source */\n")
     outfile.write("/* {} */\n".format(outfile_config['abspath']))
@@ -105,14 +102,16 @@ def writeCSource(infile, outfile_config, out_basedir):
     else:
         for bindata in bytes_from_file(infile,20):
             read_len += len(bindata)
-            s=bindata.encode("hex").upper()
+            s=binascii.b2a_hex(bindata).upper().decode('utf-8')
+#            print(s)
+#            print("".join(["\\x"+x+y for (x,y) in zip(s[0::2], s[1::2])]))
             outfile.write("\t\"" + "".join(["\\x"+x+y for (x,y) in zip(s[0::2], s[1::2])]) + "\"\n")
     
     outfile.write("};")
     outfile.truncate()
     outfile.close()
 
-def writeCMainSource(config):
+def write_c_main_source(config):
     global OUT_SOURCENAME
     temp_varlist = []
     for p in config[CRES_KEY]:
@@ -123,7 +122,7 @@ def writeCMainSource(config):
     try:
         outfile = open(os.path.join(config['outdir'], OUT_SOURCENAME), 'w+')
     except:
-        errorAndExit("Could not write c resource file.")
+        error_and_exit("Could not write c resource file.")
     
     outfile.write("/* auto generated CRES source */\n")
     outfile.write("#include \"cresource.h\"\n\n")
@@ -170,21 +169,21 @@ def writeCMainSource(config):
     outfile.close()
     return
 
-def addResource(args, prefix, fileconf, origin_in, outconf):
-    if not fileconf.has_key('name'): return 0
+def add_resource(args, prefix, fileconf, origin_in, outconf):
+    if not 'name' in fileconf: return 0
     abspath = os.path.join(os.path.abspath(os.path.dirname(origin_in)), fileconf['name'])
     try:
         infile_mtime = os.path.getmtime(abspath)
         infile_size = os.path.getsize(abspath)
         infile = open(abspath, 'rb')
     except:
-        errorAndExit("prefix: " + prefix + "\nCould not open: " + abspath);
+        error_and_exit("prefix: " + prefix + "\nCould not open: " + abspath);
 
     found_prefix = False
     for out_pre in outconf[CRES_KEY]:
-        if out_pre.has_key('prefix'):
+        if 'prefix' in out_pre:
             if out_pre['prefix'] == prefix:
-                if not out_pre.has_key('files'):
+                if not 'files' in out_pre:
                     out_pre['files'] = []
                 found_prefix = True
                 break
@@ -193,7 +192,7 @@ def addResource(args, prefix, fileconf, origin_in, outconf):
         out_pre = {'prefix': prefix, 'files': []}
         outconf[CRES_KEY].append(out_pre)
 
-    if fileconf.has_key('alias'):
+    if 'alias' in fileconf:
         name_out = fileconf['alias']
     else:
         name_out = fileconf['name']
@@ -204,14 +203,14 @@ def addResource(args, prefix, fileconf, origin_in, outconf):
     of = {'abspath': abspath, 'mtime': 0.0, 'size': 0}
     for p in outconf[CRES_KEY]:
         for f in p['files']:
-            if f.has_key('abspath'):
+            if 'abspath' in f:
                 if f['abspath'] == abspath:
-                    if not f.has_key('mtime'): f['mtime'] = 0.0
-                    if not f.has_key('size'): f['size'] = 0
+                    if not 'mtime' in f: f['mtime'] = 0.0
+                    if not 'size' in f: f['size'] = 0
                     found_data_file = True
                     df = f
-                    if (found_prefix and p.has_key('prefix') and p['prefix'] == prefix  
-                        and f.has_key('name_out') and f['name_out'] == name_out):
+                    if (found_prefix and 'prefix' in p and p['prefix'] == prefix  
+                        and 'name_out' in f and f['name_out'] == name_out):
                         found_file = True
                         of = f
                     
@@ -223,8 +222,8 @@ def addResource(args, prefix, fileconf, origin_in, outconf):
             of['size'] = df['size']
         out_pre['files'].append(of)
     
-    if (not found_data_file or not found_file or not of.has_key('name_out') or
-        (of.has_key('name_out') and of['name_out'] != name_out)):
+    if (not found_data_file or not found_file or not 'name_out' in of or
+        ('name_out' in of and of['name_out'] != name_out)):
         changes = True
     else: 
         changes = False
@@ -232,16 +231,16 @@ def addResource(args, prefix, fileconf, origin_in, outconf):
     of['name_out'] = name_out
     of['origin_config'] = origin_in
     csrc_missing = False
-    if (of.has_key('c_src') and not
+    if ('c_src' in of and not
         os.path.exists(os.path.join(outconf['outdir'], of['c_src']))):
         csrc_missing = True
     
     if of['mtime'] != infile_mtime or of['size'] != infile_size or csrc_missing:
         changes = True
-        if not args.quiet: print "Updating/Creating sources for file: " + abspath
+        if not args.quiet: print("Updating/Creating sources for file: " + abspath)
         of['mtime'] = infile_mtime
         of['size'] = infile_size
-        writeCSource(infile, of, outconf['outdir'])
+        write_c_source(infile, of, outconf['outdir'])
         # update all other resources that use the same binary data
         for p in outconf[CRES_KEY]:
             for f in p['files']:
@@ -252,10 +251,10 @@ def addResource(args, prefix, fileconf, origin_in, outconf):
     infile.close()
     return 1 if changes else 0
 
-def isSrcFileInConfig(src_filename, config):
+def is_src_in_config(src_filename, config):
     for p in config[CRES_KEY]:
         for f in p['files']:
-            if f.has_key('c_src') and f['c_src'] == src_filename:
+            if 'c_src' in f and f['c_src'] == src_filename:
                 return True
     return False
 
@@ -270,36 +269,38 @@ def create(args):
         try:
             os.makedirs(res_outdir)
         except:
-            errorAndExit("Could not create output directory '{0}'.".format(res_outdir))
+            error_and_exit("Could not create output directory '{0}'.".format(res_outdir))
 
-    # open or create cres intermediate outfile
+    # Open or create CRES intermediate output file
+    # The CRES output file keeps track of timestamps and mappings of resource files
+    # to C source files. This enables incremental updates for changed files only. 
     if not os.path.exists(os.path.join(res_outdir, OUT_FILENAME)) or args.force:
         outfile = open(os.path.join(res_outdir, OUT_FILENAME),"w+")
-        resfile_outconfig = { CRES_KEY : [] }
+        cres_outconfig = { CRES_KEY : [] }
     else:
         outfile = open(os.path.join(res_outdir, OUT_FILENAME),"r+")
         try:
-            resfile_outconfig = json.loads(outfile.read())
+            cres_outconfig = json.loads(outfile.read())
         except:
-            # warning will overwrite output configs, if OUT_FILENAME is initially not parseable
-            resfile_outconfig = { CRES_KEY : [] }
+            cres_outconfig = { CRES_KEY : [] }
             
-        if not resfile_outconfig.has_key(CRES_KEY): resfile_outconfig[CRES_KEY] = []
+        if not CRES_KEY in cres_outconfig: cres_outconfig[CRES_KEY] = []
         outfile.seek(0,0)
     
-    resfile_outconfig['outdir'] = os.path.abspath(res_outdir)
+    cres_outconfig['outdir'] = os.path.abspath(res_outdir)
 
     of_remove_list = []
     new_entries = 0
 
+    # for every resource configuration file, do...
     for infile in args.resfile:
         try:
             resfile_inconfig = json.loads(infile.read())
         except:
-            errorAndExit("Could not parse resource file '{0}'.".format(infile.name))
+            error_and_exit("Could not parse resource file '{0}'.".format(infile.name))
             
-        if not resfile_inconfig.has_key(CRES_KEY):
-            errorAndExit("Not a cresource config file. Missing {0} key.".format(CRES_KEY))
+        if not CRES_KEY in resfile_inconfig:
+            error_and_exit("Not a cresource config file. Missing {0} key.".format(CRES_KEY))
 
         res_infile_dir = os.path.dirname(infile.name)
         res_infile_abspath = os.path.abspath(infile.name)
@@ -307,30 +308,30 @@ def create(args):
 
         for p in resfile_inconfig[CRES_KEY]:
             # for every prefix section
-            if not p.has_key('prefix'):
+            if not 'prefix' in p:
                 p['prefix'] = ""
-            if not p.has_key('files'):
+            if not 'files' in p:
                 p['files'] = []
 
-        # for every file in outconfig check if in infile -> if not remove
+        # for every file in cres_outconfig check if in infile -> if not remove
         if not args.keep_missing:
             inconfig_absdir = os.path.abspath(os.path.dirname(res_infile_abspath))
-            for op in resfile_outconfig[CRES_KEY]:
-                if not op.has_key('prefix'): op['prefix'] = ""
-                if op.has_key('files'):
+            for op in cres_outconfig[CRES_KEY]:
+                if not 'prefix' in op: op['prefix'] = ""
+                if 'files' in op:
                     for of in op['files']:
-                        if not of.has_key('abspath'): continue
-                        if not of.has_key('origin_config'): continue
+                        if not 'abspath' in of: continue
+                        if not 'origin_config' in of: continue
                         if not of['origin_config'] == res_infile_abspath: continue
                         found = False
                         for ip in resfile_inconfig[CRES_KEY]:
                            for f in ip['files']:
-                                if not f.has_key('name'): continue
+                                if not 'name' in f: continue
                                 abspath = os.path.join(inconfig_absdir, f['name'])
                                 if (of['abspath'] == abspath and op['prefix'] == ip['prefix']):
-                                    if f.has_key('alias'): 
+                                    if 'alias' in f: 
                                         if f['alias'] == of['name_out']: found = True
-                                    elif f.has_key('name') and f['name'] == of['name_out']:
+                                    elif 'name' in f and f['name'] == of['name_out']:
                                         found = True
                                     if found: break
                         
@@ -341,55 +342,67 @@ def create(args):
         # add resources loop
         for p in resfile_inconfig[CRES_KEY]:
             for f in p['files']:
-                new_entries += addResource(args, p['prefix'], f, res_infile_abspath, resfile_outconfig)
+                new_entries += add_resource(args, p['prefix'], f, res_infile_abspath, cres_outconfig)
         
-    # delete orphaned C src files
+    # delete orphaned source files
     for f in of_remove_list:
-        if f.has_key('c_src') and not isSrcFileInConfig(f['c_src'], resfile_outconfig):
-            abs_delpath = os.path.join(resfile_outconfig['outdir'],f['c_src'])
+        if 'c_src' in f and not is_src_in_config(f['c_src'], cres_outconfig):
+            abs_delpath = os.path.join(cres_outconfig['outdir'],f['c_src'])
             if os.path.exists(abs_delpath):
-                if not args.quiet: print "deleting: " + f['c_src']
+                if not args.quiet: print("deleting: " + f['c_src'])
                 os.remove(abs_delpath)
     
     # write main source file for config
     if new_entries > 0 or len(of_remove_list) > 0:
-        #print "Update cres.c"
-        writeCMainSource(resfile_outconfig) 
+        write_c_main_source(cres_outconfig) 
         if args.list_outfile:
-            try: slfile = open(args.list_outfile,'w+')
-            except: errorAndExit("Cannot open:" + args.list_outfile)
-            writeSourcesList(resfile_outconfig, resfile_outconfig['outdir'], slfile, cmake=args.list_cmake_prefix, absolute=True)
+            listfile_temp = args.list_outfile + ".tmp~"
+            try: slfile = open(listfile_temp,'w+')
+            except: error_and_exit("Cannot open:" + listfile_temp)
+            write_sources_list(cres_outconfig, cres_outconfig['outdir'], slfile, cmake=args.list_cmake_prefix, absolute=True)
             slfile.truncate()
             slfile.close()
-        
-    outfile.write(json.dumps(resfile_outconfig, indent=2))
+
+            # If list file exists, only update if it would change or --force is set
+            if os.path.exists(args.list_outfile):
+                if not filecmp.cmp(args.list_outfile, listfile_temp) or args.force:
+                    os.remove(args.list_outfile) # otherwise os.rename will fail on Windows
+                    os.rename(listfile_temp,args.list_outfile)
+                else:
+                    os.remove(listfile_temp)
+            else:
+                os.rename(listfile_temp,args.list_outfile)
+
+    outfile.write(json.dumps(cres_outconfig, indent=2))
     outfile.truncate()
     outfile.close()
-    if not args.quiet: print "OK"
+    if not args.quiet: print("OK")
     return
 
 def listfiles(args):
     try:
         infile = open(os.path.join(args.dir, OUT_FILENAME),"r")
     except:
-        errorAndExit("Cannot open: " + os.path.join(args.dir, OUT_FILENAME))
+        error_and_exit("Cannot open: " + os.path.join(args.dir, OUT_FILENAME))
     
     try:
         config = json.loads(infile.read())
     except:
-        errorAndExit("Parser error")
+        error_and_exit("Parser error")
 
     infile.close()
-    writeSourcesList(config, args.dir, args.outfile,cmake=args.cmake_prefix,relative=args.relative,absolute=args.absolute)
+    write_sources_list(config, args.dir, args.outfile,cmake=args.cmake_prefix,relative=args.relative,absolute=args.absolute)
     
-def writeSourcesList(config, outdir, outfile, cmake, relative=False, absolute=False):
-    if not config.has_key(CRES_KEY): config[CRES_KEY] = []
+def write_sources_list(config, outdir, outfile, cmake, relative=False, absolute=False):
+    """Write a list of source files for a given configuration."""
+
+    if not CRES_KEY in config: config[CRES_KEY] = []
     source_files = [OUT_SOURCENAME]
     for p in config[CRES_KEY]:
-        if not p.has_key('prefix'): p['prefix'] = ""
-        if not p.has_key('files'): p['files'] = []
+        if not 'prefix' in p: p['prefix'] = ""
+        if not 'files' in p: p['files'] = []
         for f in p['files']:
-            if f.has_key('c_src') and f['c_src'] not in source_files:
+            if 'c_src' in f and f['c_src'] not in source_files:
                 source_files.append(f['c_src'])
             
     if cmake: 

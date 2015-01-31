@@ -25,28 +25,29 @@ function(mkcres_add_library name configfiles mkcres_dir)
     set(mkcres_outdir ${CMAKE_CURRENT_BINARY_DIR}/${name}_cresources)
     set(mkcres_outfile ${mkcres_outdir}/cres_files.cmake)
 
-    add_custom_target(${mkcres_res_target} "${PYTHON_EXECUTABLE}" "${mkcres_script}" create --quiet
-                        --list-outfile "${mkcres_outfile}" --list-cmake-prefix=${name}
-                        --outdir "${mkcres_outdir}" ${configfiles}
+	# mkcres update command arguments
+	set(mkcres_update_args create --list-outfile "${mkcres_outfile}" --list-cmake-prefix=${name}
+                                  --outdir "${mkcres_outdir}" ${configfiles})
+	
+    add_custom_target(${mkcres_res_target} "${PYTHON_EXECUTABLE}" "${mkcres_script}" 
+						${mkcres_update_args} --quiet
                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-    add_custom_target(${mkcres_res_force_target} "${PYTHON_EXECUTABLE}" "${mkcres_script}" create --quiet
-                        --list-outfile "${mkcres_outfile}" --list-cmake-prefix=${name}
-                        --outdir "${mkcres_outdir}" ${configfiles} --force
+    add_custom_target(${mkcres_res_force_target} "${PYTHON_EXECUTABLE}" "${mkcres_script}" 
+						${mkcres_update_args} --force --quiet
                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
     if(NOT EXISTS "${mkcres_outfile}")
-        execute_process(COMMAND "${PYTHON_EXECUTABLE}" "${mkcres_script}" create  --quiet
-                        --list-outfile "${mkcres_outfile}" --list-cmake-prefix=${name}
-                        --outdir "${mkcres_outdir}" --force ${configfiles}
+        execute_process(COMMAND "${PYTHON_EXECUTABLE}" "${mkcres_script}" 
+						${mkcres_update_args} --force --quiet
                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-    endif()
-    
-    include("${mkcres_outfile}")
+	endif()
+	
+	include("${mkcres_outfile}")
     include_directories(${mkcres_dir})
     add_library(${name} STATIC EXCLUDE_FROM_ALL ${${name}_CRES_SOURCE_FILES} ${mkcres_dir}/cresource.c)
     add_dependencies(${name} ${mkcres_res_target})
-    
+
     if(NOT TARGET mkcres-update)
         add_custom_target(mkcres-update)
     endif()
