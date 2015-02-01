@@ -7,6 +7,19 @@
 
 int main (int argc, char **argv) 
 {
+    /* Get a single resource file by name */
+    {
+        const char filename[] = "data-files/FILE01";
+        cresource_t *res = get_cresource(filename);
+        if(res) {
+            printf("%s found (%lu bytes)\n", filename, res->size);
+        } else {
+            printf("%s not found.\n", filename);
+        }
+    }
+    
+    printf("\n=== List all resources:\n");
+    
     /* List all embedded resources */
     cresource_collection_t *c = get_cresources();
     if( c ) {
