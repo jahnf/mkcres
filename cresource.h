@@ -7,21 +7,21 @@
 #define CRESOURCE__H_
 
 typedef const struct {
-   const char *name;
+   const char* const name;
    const unsigned long size;
    const unsigned char *data;
 } cresource_t;
 
 typedef const struct {
-    const char *prefix;
+    const char* const prefix;
     const unsigned int prefix_len;
     const unsigned long num_resources;
-    cresource_t *resources[];
+    const cresource_t* const resources[];
 } cresource_prefix_t;
 
 typedef const struct {
     const unsigned long num_prefix_sections;
-    cresource_prefix_t *prefix_sections[];
+    const cresource_prefix_t* const prefix_sections[];
 } cresource_collection_t;
 
 /** Get a resource with the given filename. Returns a null ptr if the resource
