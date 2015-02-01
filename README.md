@@ -2,7 +2,7 @@ mkcres
 ======
 
 mkcres is a Python tool for generating and maintaining C/C++ resource 
-files that can be embedded in a program. mkcres comes with a python comand 
+files that can be embedded in a program. mkcres comes with a python command 
 line tool and also a header and source for easy access to the embedded 
 resources within the program.
 
@@ -20,7 +20,7 @@ times under a different name but will be compiled in only once.
   - [Command line options](#command-line-options)
   - [Usage in your C code](#usage-in-your-c-code)
     - [Get a resource](#get-a-resource)
-    - [Loop throuh all resources]("#loop-throuh-all-resources)
+    - [Loop through all resources]("#loop-through-all-resources)
   - [Integrate with CMake](#integrate-with-cmake)
     - [Drawbacks with CMake](#drawbacks-with-cmake)
   - [Integrate within a Makefile](#integrate-within-a-makefile)
@@ -35,7 +35,7 @@ version 2.7 since the `argparse` is used.
 ### Configuration
 
 The configuration is done in a JSON file. The file has to contain the 
-`CRES` value, which is an array of prefix conigurations. A prefix
+`CRES` value, which is an array of prefix configurations. A prefix
 configuration can contain the `prefix` and an array of `files`.
 A resource can be later found and referenced via *prefix + filename* or
 *prefix + alias* if the alias for a resource file is set.
@@ -96,7 +96,7 @@ const unsigned char *data;
 } cresource_t;
 ```
 
-##### Loop throuh all resources
+##### Loop through all resources
 
 *TODO*
 
