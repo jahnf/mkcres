@@ -15,18 +15,17 @@ times under a different name but will be compiled in only once.
 
 **Table of Contents** 
 
-- [mkcres](#)
-	- [Usage](#)
-		- [Configuration](#)
-		- [Command line options](#)
-		- [Usage in your C code](#)
-			- [Get a resource](#)
-			- [Loop throuh all resources](#)
-		- [Integrate with CMake](#)
-			- [Drawbacks with CMake](#)
-		- [Integrate within a Makefile](#)
-	- [Dependencies](#)
-	- [License](#)
+- [Usage](#usage)
+  - [Configuration](#configuration)
+  - [Command line options](#command-line-options)
+  - [Usage in your C code](#usage-in-your-c-code)
+    - [Get a resource](#get-a-resource)
+    - [Loop throuh all resources]("#loop-throuh-all-resources)
+  - [Integrate with CMake](#integrate-with-cmake)
+    - [Drawbacks with CMake](#drawbacks-with-cmake)
+  - [Integrate within a Makefile](#integrate-within-a-makefile)
+- [Dependencies](#dependencies)
+- [License](#license)
 
 Usage
 -----
