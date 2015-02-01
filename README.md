@@ -13,6 +13,21 @@ generated C files since mkcres only updates files if the modification
 date of a file changes. A single file can appear in the resources multiple
 times under a different name but will be compiled in only once.
 
+**Table of Contents** 
+
+- [mkcres](#)
+	- [Usage](#)
+		- [Configuration](#)
+		- [Command line options](#)
+		- [Usage in your C code](#)
+			- [Get a resource](#)
+			- [Loop throuh all resources](#)
+		- [Integrate with CMake](#)
+			- [Drawbacks with CMake](#)
+		- [Integrate within a Makefile](#)
+	- [Dependencies](#)
+	- [License](#)
+
 Usage
 -----
 mkcres should work with Python versions 2 and 3, but will require at least 
