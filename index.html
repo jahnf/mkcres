@@ -2,9 +2,9 @@
 <html>
 
   <head>
-    <meta charset='utf-8' />
-    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-    <meta name="description" content="mkcres : A tool for generating and maintaining C/C++ resource files to be embedded in a program." />
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="mkcres : A tool for generating and maintaining C/C++ resource files to be embedded in a program.">
 
     <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
 
@@ -32,7 +32,7 @@
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
         <h1>
-<a name="mkcres" class="anchor" href="#mkcres"><span class="octicon octicon-link"></span></a>mkcres</h1>
+<a id="mkcres" class="anchor" href="#mkcres" aria-hidden="true"><span class="octicon octicon-link"></span></a>mkcres</h1>
 
 <p>mkcres is a Python tool for generating and maintaining C/C++ resource 
 files that can be embedded in a program. mkcres comes with a python comand 
@@ -43,34 +43,186 @@ resources within the program.</p>
 of C source files that can be compiled together with your project and 
 included in your build process. It also supports partial updates of the 
 generated C files since mkcres only updates files if the modification 
-date of a file changes.</p>
+date of a file changes. A single file can appear in the resources multiple
+times under a different name but will be compiled in only once.</p>
+
+<p><strong>Table of Contents</strong> </p>
+
+<ul>
+<li>
+<a href="#usage">Usage</a>
+
+<ul>
+<li><a href="#configuration">Configuration</a></li>
+<li><a href="#command-line-options">Command line options</a></li>
+<li>
+<a href="#usage-in-your-c-code">Usage in your C code</a>
+
+<ul>
+<li><a href="#get-a-resource">Get a resource</a></li>
+<li><a href="%22#loop-throuh-all-resources">Loop throuh all resources</a></li>
+</ul>
+</li>
+<li>
+<a href="#integrate-with-cmake">Integrate with CMake</a>
+
+<ul>
+<li><a href="#drawbacks-with-cmake">Drawbacks with CMake</a></li>
+</ul>
+</li>
+<li><a href="#integrate-within-a-makefile">Integrate within a Makefile</a></li>
+</ul>
+</li>
+<li><a href="#dependencies">Dependencies</a></li>
+<li><a href="#license">License</a></li>
+</ul>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<p>mkcres should work with Python versions 2 and 3, but will require at least 
+version 2.7 since the <code>argparse</code> is used.</p>
+
+<h3>
+<a id="configuration" class="anchor" href="#configuration" aria-hidden="true"><span class="octicon octicon-link"></span></a>Configuration</h3>
+
+<p>The configuration is done in a JSON file. The file has to contain the 
+<code>CRES</code> value, which is an array of prefix conigurations. A prefix
+configuration can contain the <code>prefix</code> and an array of <code>files</code>.
+A resource can be later found and referenced via <em>prefix + filename</em> or
+<em>prefix + alias</em> if the alias for a resource file is set.
+If <em>prefix</em> is not set, it will be automatically an empty string.</p>
 
 <p>Here is an example JSON configuration file:</p>
 
-<pre><code>{ 
-  "CRES": [
+<div class="highlight highlight-json"><pre>{ 
+  <span class="pl-s1"><span class="pl-pds">"</span>CRES<span class="pl-pds">"</span></span>: [
     {
-      "prefix": "icons/",
-      "files": [
-        { "name": "img/app32x32.png" },
-        { "name": "x.png", "alias": "img/exit.png" }
+      <span class="pl-s1"><span class="pl-pds">"</span>prefix<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>icons/<span class="pl-pds">"</span></span>,
+      <span class="pl-s1"><span class="pl-pds">"</span>files<span class="pl-pds">"</span></span>: [
+        { <span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>img/app32x32.png<span class="pl-pds">"</span></span> },
+        { <span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>x.png<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>alias<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>img/exit.png<span class="pl-pds">"</span></span> }
       ]
     }, 
     {
-      "prefix": "other_stuff/",
-      "files": [
-        { "name": "encryption_key_v1.pub", "alias": "key.pub" },
-        { "name": "lookup.sqlite" }
+      <span class="pl-s1"><span class="pl-pds">"</span>prefix<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>other_stuff/<span class="pl-pds">"</span></span>,
+      <span class="pl-s1"><span class="pl-pds">"</span>files<span class="pl-pds">"</span></span>: [
+        { <span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>encryption_key_v1.pub<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>alias<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>key.pub<span class="pl-pds">"</span></span> },
+        { <span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>lookup.sqlite<span class="pl-pds">"</span></span> }
       ]
     }
   ]
-}
-</code></pre>
+}</pre></div>
 
 <h3>
-<a name="dependencies" class="anchor" href="#dependencies"><span class="octicon octicon-link"></span></a>Dependencies</h3>
+<a id="command-line-options" class="anchor" href="#command-line-options" aria-hidden="true"><span class="octicon octicon-link"></span></a>Command line options</h3>
 
-<p>mkcres needs Python 2 version 2.7 or higher since it currently uses the argparse library.</p>
+<ul>
+<li>[ ] <em>TODO</em>: Describe command line usage and arguments</li>
+</ul>
+
+<h3>
+<a id="usage-in-your-c-code" class="anchor" href="#usage-in-your-c-code" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage in your C code</h3>
+
+<p>To use the resources compiled with your executable code include the 
+mkcres C-header <a href="cresource.h">cresource.h</a>.</p>
+
+<div class="highlight highlight-c"><pre>#<span class="pl-k">include</span> <span class="pl-s1"><span class="pl-pds">"</span>cresource.h<span class="pl-pds">"</span></span></pre></div>
+
+<p>Also have a look at the <a href="examples">examples</a> in the example directory.</p>
+
+<h5>
+<a id="get-a-resource" class="anchor" href="#get-a-resource" aria-hidden="true"><span class="octicon octicon-link"></span></a>Get a resource</h5>
+
+<p>Use the function <code>get_cresource</code> to get a resource file:</p>
+
+<div class="highlight highlight-c"><pre><span class="pl-c">/** Get a resource with the given filename. Returns a null ptr if the resource</span>
+<span class="pl-c">* was not found. */</span>
+<span class="pl-s3">cresource_t</span>* <span class="pl-en">get_cresource</span>(<span class="pl-s">const</span> <span class="pl-st">char</span>* filename);</pre></div>
+
+<p>If the resource exists, the function will return a pointer to a <code>cresource_t</code>
+struct, <code>null</code> otherwise. This is how <code>cresource_t</code> is defined:</p>
+
+<div class="highlight highlight-c"><pre><span class="pl-st">typedef</span> <span class="pl-s">const</span> <span class="pl-st">struct</span> {
+<span class="pl-s">const</span> <span class="pl-st">char</span> *name;
+<span class="pl-s">const</span> <span class="pl-st">unsigned</span> <span class="pl-st">long</span> size;
+<span class="pl-s">const</span> <span class="pl-st">unsigned</span> <span class="pl-st">char</span> *data;
+} <span class="pl-s3">cresource_t</span>;</pre></div>
+
+<h5>
+<a id="loop-throuh-all-resources" class="anchor" href="#loop-throuh-all-resources" aria-hidden="true"><span class="octicon octicon-link"></span></a>Loop throuh all resources</h5>
+
+<p><em>TODO</em></p>
+
+<h3>
+<a id="integrate-with-cmake" class="anchor" href="#integrate-with-cmake" aria-hidden="true"><span class="octicon octicon-link"></span></a>Integrate with CMake</h3>
+
+<p>For easy use within CMake files the function <code>mkcres_add_library(name config_file mkcres_dir)</code> 
+of the helper script <code>mkcres.cmake</code> can be used.  Lets have a look at a simple example:</p>
+
+<div class="highlight highlight-CMake"><pre><span class="pl-c"># Assuming you have all the mkcres files in a subdirectory called 'mkcres'</span>
+<span class="pl-c"># (mkcres.cmake mkcres.py cresource.c cresource.h)</span>
+
+<span class="pl-s3">include</span>(mkcres/mkcres.cmake)
+mkcres_add_library(myresources resources.json <span class="pl-s1">"./mkcres"</span>)
+
+<span class="pl-s3">add_executable</span>(example main.c)
+<span class="pl-s3">target_link_libraries</span>(example myresources)</pre></div>
+
+<p>Using the <code>mkcres_add_library</code> function will automatically add additional 
+make targets to your project:</p>
+
+<ul>
+<li>
+<em>mkcres-update</em>: will update the C resource files form all 
+targets added with <code>mkcres_add_library</code>
+</li>
+<li>
+<em>mkcres-force-rewrite</em>: will rewrite all the C resource files 
+completely from all targets added with <code>mkcres_add_library</code>
+</li>
+</ul>
+
+<p>For a full example have a look at the <a href="examples/example-cmake">CMake example</a> 
+in the examples directory.</p>
+
+<h5>
+<a id="drawbacks-with-cmake" class="anchor" href="#drawbacks-with-cmake" aria-hidden="true"><span class="octicon octicon-link"></span></a>Drawbacks with CMake</h5>
+
+<p><strong>run <code>make mkcres-update</code> before running <code>make</code></strong> when changing the 
+JSON resource configuration so that resources files are added or 
+removed - otherwise the first <code>make</code> call will result in an error.
+<em>Here is why:</em></p>
+
+<p>Once a CMake build is configured and if the JSON configuration is changed, 
+so that resources files are added or removed the first <code>make</code> call will 
+result in either a linker or a CMake error. This is because CMake needs 
+the full list of source files for a target (executable or library)
+at configuration time. In the background mkcres.py creates another 
+CMake file that will be included from mkcres.cmake. This file contains the
+list of C-resource files to be compiled.</p>
+
+<p>A <code>make</code> step will update the generated include file for CMake but this 
+is at a point where CMake already has included the file to change and 
+will only be detected from CMake with the next <code>make</code> run. Unfortunately
+there is no way around this.</p>
+
+<h3>
+<a id="integrate-within-a-makefile" class="anchor" href="#integrate-within-a-makefile" aria-hidden="true"><span class="octicon octicon-link"></span></a>Integrate within a Makefile</h3>
+
+<p>mkcres can be integrated with basically everywhere where Python is available.
+For an integration into your Makefiles have a look at the 
+<a href="examples/example-make">Makefile example</a> in the examples directory.</p>
+
+<h2>
+<a id="dependencies" class="anchor" href="#dependencies" aria-hidden="true"><span class="octicon octicon-link"></span></a>Dependencies</h2>
+
+<p>mkcres needs Python version 2.7 or higher since it uses the argparse library.</p>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span class="octicon octicon-link"></span></a>License</h2>
+
+<p>See <a href="https://github.com/jahnf/mkcres/blob/master/LICENSE">LICENSE</a>.</p>
       </section>
     </div>
 
