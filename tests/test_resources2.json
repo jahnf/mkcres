@@ -1,0 +1,26 @@
+{ 
+  "CRES": [
+    {
+      "prefix": "images/",
+      "files": [
+        { "name": "linux_logo.jpg" },
+        { "name": "linux_logo.jpg", "alias": "tux.jpg" },
+        { "name": "linux_logo.jpg", "alias": "penguin.jpg" }
+      ]
+    }, 
+    {
+      "prefix": "data-files/",
+      "files": [
+        { "name": "FILE01" },
+        { "name": "FILE02" },
+        { "name": "FILE03" }
+      ]
+    },
+    {
+      "files": [
+        { "name": "main.cpp", "alias": "source-main.cpp" },
+        { "name": "main.c", "alias": "source-main.c" }
+      ]
+    }
+  ]
+}
