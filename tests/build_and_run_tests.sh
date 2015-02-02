@@ -4,6 +4,12 @@ set -e
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 TEST_DIR="build_and_test"
 
+# since travis-ci only sets CC environment we set the CXX
+[ "$CC" == "gcc" ] && export CXX="g++"
+[ "$CC" == "clang" ] && export CXX="clang++"
+
+echo $CC $CXX
+
 # build
 rm -rf $TEST_DIR
 mkdir -p $TEST_DIR && cd $TEST_DIR
