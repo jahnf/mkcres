@@ -1,5 +1,6 @@
 mkcres
 ======
+[![Build Status](https://travis-ci.org/jahnf/mkcres.svg?branch=master)](https://travis-ci.org/jahnf/mkcres)
 
 mkcres is a Python tool for generating and maintaining C/C++ resource 
 files that can be embedded in a program. mkcres comes with a python command 

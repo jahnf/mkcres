@@ -94,7 +94,7 @@ def write_c_source(infile, outfile_config, out_basedir):
         
     outfile.write("/* auto generated CRES source */\n")
     outfile.write("/* {} */\n".format(outfile_config['abspath']))
-    outfile.write("const unsigned char const {}[] = {{\n".format(outfile_config['c_data_var']))
+    outfile.write("const unsigned char {}[] = {{\n".format(outfile_config['c_data_var']))
     
     read_len = 0
     if outfile_config['size'] == 0:
