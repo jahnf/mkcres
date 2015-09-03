@@ -1,7 +1,14 @@
 language: c
 
+sudo: false
+
 compiler:
   - gcc
   - clang
+
+addons:
+  apt:
+    packages:
+    - cmake
 
 script: tests/build_and_run_tests.sh
