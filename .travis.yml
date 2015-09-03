@@ -6,9 +6,8 @@ compiler:
   - gcc
   - clang
 
-addons:
-  apt:
-    packages:
-    - cmake
+os:
+  - linux
+  - osx
 
 script: tests/build_and_run_tests.sh
