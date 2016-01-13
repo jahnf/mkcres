@@ -103,8 +103,6 @@ def write_c_source(infile, outfile_config, out_basedir):
         for bindata in bytes_from_file(infile,20):
             read_len += len(bindata)
             s=binascii.b2a_hex(bindata).upper().decode('utf-8')
-#            print(s)
-#            print("".join(["\\x"+x+y for (x,y) in zip(s[0::2], s[1::2])]))
             outfile.write("\t\"" + "".join(["\\x"+x+y for (x,y) in zip(s[0::2], s[1::2])]) + "\"\n")
     
     outfile.write("};")
@@ -139,7 +137,7 @@ def write_c_main_source(config):
             outfile.write("\t{}, /* filesize */\n".format(f['size']))
             outfile.write("\t{} /* data */\n".format(f['c_data_var']))
             outfile.write("};\n")
-            file_count = file_count +1
+            file_count += 1
 
     prefix_count = 0
     prefix_varlist = []
@@ -156,7 +154,7 @@ def write_c_main_source(config):
             outfile.write("\t\t&{0},\n".format(f['c_var']))
         outfile.write("\t\t0\n\t}\n};\n")
         prefix_varlist.append(prefix_var)
-        prefix_count = prefix_count + 1
+        prefix_count += 1
     
     outfile.write("\nstatic {0} {1} = {{\n".format(CRES_CCOLL_TYPE, CRES_CRESOURCE_VAR))
     outfile.write("\t{0}, /* number of prefix sections */\n\t{{ /* prefix sections */\n".format(len(prefix_varlist)))
